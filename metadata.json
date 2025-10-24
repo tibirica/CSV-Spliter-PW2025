@@ -1,0 +1,5 @@
+{
+  "name": "CSV Company Splitter",
+  "description": "An elegant web application to upload a CSV file and split it into multiple CSV files, one for each unique company found in the 'Nome da operadora:' column. The app provides download links for each generated file.",
+  "requestFramePermissions": []
+}
