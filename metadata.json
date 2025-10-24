@@ -1,5 +1,5 @@
 {
-  "name": "CSV Company Splitter",
-  "description": "An elegant web application to upload a CSV file and split it into multiple CSV files, one for each unique company found in the 'Nome da operadora:' column. The app provides download links for each generated file.",
+  "name": "CSV Splitter",
+  "description": "An elegant web application to upload a CSV file and split it into multiple CSV files based on unique values in a specific column (e.g., 'Nome da operadora:' or 'Nome do restaurante:'). The app provides download links for each generated file and an option to download all as a ZIP archive.",
   "requestFramePermissions": []
 }

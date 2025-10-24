@@ -68,15 +68,21 @@ const App: React.FC = () => {
 
     try {
       let results;
-      const companyColumnName = 'Nome da operadora:';
+      const possibleColumnNames = ['Nome da operadora:', 'Nome do restaurante:', 'Nome da empresa:'];
+
+      const findGroupingColumn = (data: any[]): string | undefined => {
+        if (!data || data.length === 0) return undefined;
+        const firstRow = data[0];
+        return possibleColumnNames.find(name => firstRow.hasOwnProperty(name));
+      }
 
       try {
         // Try parsing with UTF-8 first
         results = await parseWithEncoding(sourceFile, 'UTF-8');
-        const headerFound = results.data.length > 0 && results.data[0].hasOwnProperty(companyColumnName);
+        const groupingColumnFound = !!findGroupingColumn(results.data);
         
-        if (!headerFound && results.data.length > 0) {
-           throw new Error('Header not found with UTF-8, trying fallback encoding.');
+        if (!groupingColumnFound && results.data.length > 0) {
+           throw new Error('Grouping header not found with UTF-8, trying fallback encoding.');
         }
         if (results.errors.length > 0 && results.data.length === 0) {
             throw new Error('Parsing with UTF-8 failed, trying fallback encoding.');
@@ -96,25 +102,28 @@ const App: React.FC = () => {
         }
       }
       
-      if (!results.data[0] || !results.data[0].hasOwnProperty(companyColumnName)) {
-        throw new Error(`CSV must contain a column named "${companyColumnName}"`);
+      const groupingColumnName = findGroupingColumn(results.data);
+
+      if (!groupingColumnName) {
+        const expectedColumnsString = possibleColumnNames.map(name => `'${name}'`).join(', ');
+        throw new Error(`CSV must contain one of the following columns: ${expectedColumnsString}`);
       }
 
-      const groupedByCompany = results.data.reduce((acc, row) => {
-        const companyName = row[companyColumnName]?.trim();
-        if (companyName) {
-          if (!acc[companyName]) {
-            acc[companyName] = [];
+      const groupedByValue = results.data.reduce((acc, row) => {
+        const groupName = row[groupingColumnName]?.trim();
+        if (groupName) {
+          if (!acc[groupName]) {
+            acc[groupName] = [];
           }
-          acc[companyName].push(row);
+          acc[groupName].push(row);
         }
         return acc;
       }, {} as Record<string, any[]>);
 
-      const files: GeneratedFile[] = Object.entries(groupedByCompany).map(([companyName, rows]) => {
+      const files: GeneratedFile[] = Object.entries(groupedByValue).map(([groupName, rows]) => {
         const csvContent = Papa.unparse(rows);
         return {
-          filename: sanitizeFilename(companyName),
+          filename: sanitizeFilename(groupName),
           content: csvContent,
         };
       });
@@ -162,10 +171,10 @@ const App: React.FC = () => {
       <div className="w-full max-w-4xl mx-auto space-y-8">
         <header className="text-center">
           <h1 className="text-4xl sm:text-5xl font-bold text-white tracking-tight">
-            CSV <span className="text-sky-400">Company Splitter</span>
+            CSV <span className="text-sky-400">Splitter</span>
           </h1>
           <p className="mt-4 text-lg text-slate-400 max-w-2xl mx-auto">
-            Upload a CSV file to split it into individual files based on company names.
+            Upload a CSV file to split it into individual files based on columns like company or restaurant name.
           </p>
         </header>
 
